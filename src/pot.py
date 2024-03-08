@@ -1,4 +1,6 @@
 import numpy as np
+import pickle
+import matplotlib.pyplot
 
 from src.spot import SPOT
 from src.constants import *
@@ -117,7 +119,7 @@ def bf_search(score, label, start, end=None, step_num=1, display_freq=1, verbose
     return m, m_t
 
 
-def pot_eval(init_score, score, label, q=1e-5, level=0.02):
+def pot_eval(init_score, score, label, q=1e-5, level=0.02, testing=False):
     """
     Run POT method on given score.
     Args:
@@ -148,6 +150,28 @@ def pot_eval(init_score, score, label, q=1e-5, level=0.02):
     pred, p_latency = adjust_predicts(score, label, pot_th, calc_latency=True)
     # DEBUG - np.save(f'{debug}.npy', np.array(pred))
     # DEBUG - print(np.argwhere(np.array(pred)))
+    if testing:
+        fprg, tprg, threshold_roc = roc_curve(label, score)
+        auc = roc_auc_score(label, score)
+        precisiong, recallg, threshold_pr = precision_recall_curve(label, score)
+        ap = average_precision_score(label, score)
+        words = {
+            'fpr': fprg,
+            'tpr': tprg,
+            'precision': precisiong,
+            'recall': recallg,
+            'threshold_roc': threshold_roc,
+            'threshold_pr': threshold_pr,
+            'label': label,
+            'score': score
+        }
+
+        print(f'[DEBUG] AUC: {auc}, AP: {ap}')
+        with open('words.pkl', 'wb') as f:
+            pickle.dump(words, f)
+
+        matplotlib.pyplot.plot(fprg, tprg)
+        matplotlib.pyplot.savefig('roc.jpg')
     p_t = calc_point2point(pred, label)
     # print('POT result: ', p_t, pot_th, p_latency)
     return {

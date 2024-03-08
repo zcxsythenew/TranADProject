@@ -2,7 +2,15 @@
 __pycache__/
 *.py[cod]
 *$py.class
-processed/
+processed/MBA
+processed/MSDS
+processed/MSL
+processed/NAB
+processed/SMAP
+processed/SMD
+processed/SWaT
+processed/UCR
+processed/WADI
 plots/
 checkpoints/
 data/MSDS/metrics

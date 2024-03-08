@@ -9,7 +9,6 @@ from torch.nn import TransformerEncoder
 from torch.nn import TransformerDecoder
 from src.dlutils import *
 from src.constants import *
-torch.manual_seed(1)
 
 ## Separate LSTM for each variable
 class LSTM_Univariate(nn.Module):
@@ -495,9 +494,9 @@ class TranAD(nn.Module):
 		self.lr = lr
 		self.batch = 128
 		self.n_feats = feats
-		self.n_window = 10
-		self.n = self.n_feats * self.n_window
-		self.pos_encoder = PositionalEncoding(2 * feats, 0.1, self.n_window)
+		self.n_window = 90
+		self.n = self.n_feats * (self.n_window - 1)
+		self.pos_encoder = PositionalEncoding(2 * feats, 0.1, self.n_window - 1)
 		encoder_layers = TransformerEncoderLayer(d_model=2 * feats, nhead=feats, dim_feedforward=16, dropout=0.1)
 		self.transformer_encoder = TransformerEncoder(encoder_layers, 1)
 		decoder_layers1 = TransformerDecoderLayer(d_model=2 * feats, nhead=feats, dim_feedforward=16, dropout=0.1)
@@ -505,6 +504,18 @@ class TranAD(nn.Module):
 		decoder_layers2 = TransformerDecoderLayer(d_model=2 * feats, nhead=feats, dim_feedforward=16, dropout=0.1)
 		self.transformer_decoder2 = TransformerDecoder(decoder_layers2, 1)
 		self.fcn = nn.Sequential(nn.Linear(2 * feats, feats), nn.Sigmoid())
+		self.mse_loss = nn.MSELoss(reduction='none')
+		self.loss_fcn = nn.Sequential(
+			nn.Linear(2 * feats, feats),
+			nn.ReLU(),
+			nn.Linear(feats, round(feats / 2)),
+			nn.ReLU(),
+			nn.Linear(round(feats / 2), 1),
+			nn.Sigmoid(),
+		)
+		self.gru = nn.GRU(input_size=feats, hidden_size=feats, num_layers=3, batch_first=False)
+		self.gru2 = nn.GRU(input_size=feats, hidden_size=feats, num_layers=3, batch_first=False)
+		self.linear = nn.Sequential(nn.Linear(2, 1), nn.Sigmoid())
 
 	def encode(self, src, c, tgt):
 		src = torch.cat((src, c), dim=2)
@@ -515,10 +526,30 @@ class TranAD(nn.Module):
 		return tgt, memory
 
 	def forward(self, src, tgt):
+		# Predictor A
+		# Phase 0 - GRU
+		token, _ = self.gru(src)
+		token = token[-1, :, :]
+		token = token.reshape(1, token.shape[0], token.shape[1])
 		# Phase 1 - Without anomaly scores
 		c = torch.zeros_like(src)
-		x1 = self.fcn(self.transformer_decoder1(*self.encode(src, c, tgt)))
+		encoded = self.encode(src, c, token)
+		x1 = self.fcn(self.transformer_decoder1(*encoded))
 		# Phase 2 - With anomaly scores
 		c = (x1 - src) ** 2
-		x2 = self.fcn(self.transformer_decoder2(*self.encode(src, c, tgt)))
-		return x1, x2
+		x2 = self.fcn(self.transformer_decoder2(*encoded))
+
+		# Predictor B:
+		# x3, _ = self.gru2(src)
+		# x3 = x3[-1, :, :]
+		# x3 = x3.reshape(1, x3.shape[0], x3.shape[1])
+		return x1, x2 # , x3
+	
+	def loss(self, x1: torch.Tensor, x2: torch.Tensor, tgt: torch.Tensor):
+		x = torch.concatenate([x1, x2], dim=2)
+		tgt = torch.concatenate([tgt, tgt], dim=2)
+		x = self.mse_loss(x, tgt)
+		# x_final = self.loss_fcn(x)
+		# x_final = x_final * 1e-5
+		x_final = torch.mean(x, dim=2, keepdim=True)
+		return x_final, x[:, :, -self.n_feats:]

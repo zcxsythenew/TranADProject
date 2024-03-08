@@ -15,6 +15,10 @@ from time import time
 from pprint import pprint
 # from beepy import beep
 
+
+DEVICE = torch.device('cuda:5')
+
+
 def convert_to_windows(data, model):
 	windows = []; w_size = model.n_window
 	for i, g in enumerate(data): 
@@ -91,7 +95,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				loss.backward()
 				optimizer.step()
 			scheduler.step()
-			tqdm.write(f'Epoch {epoch},\tL1 = {np.mean(l1s)},\tL2 = {np.mean(l2s)}')
+			print(f'Epoch {epoch},\tL1 = {np.mean(l1s)},\tL2 = {np.mean(l2s)}')
 			return np.mean(l1s)+np.mean(l2s), optimizer.param_groups[0]['lr']
 		else:
 			ae1s = []
@@ -118,7 +122,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				optimizer.step()
 			# res = torch.stack(res); np.save('ascores.npy', res.detach().numpy())
 			scheduler.step()
-			tqdm.write(f'Epoch {epoch},\tL1 = {np.mean(l1s)}')
+			print(f'Epoch {epoch},\tL1 = {np.mean(l1s)}')
 			return np.mean(l1s), optimizer.param_groups[0]['lr']
 		else:
 			ae1s, y_pred = [], []
@@ -141,7 +145,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				optimizer.zero_grad()
 				loss.backward()
 				optimizer.step()
-			tqdm.write(f'Epoch {epoch},\tMSE = {np.mean(mses)},\tKLD = {np.mean(klds)}')
+			print(f'Epoch {epoch},\tMSE = {np.mean(mses)},\tKLD = {np.mean(klds)}')
 			scheduler.step()
 			return loss.item(), optimizer.param_groups[0]['lr']
 		else:
@@ -167,7 +171,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				loss.backward()
 				optimizer.step()
 			scheduler.step()
-			tqdm.write(f'Epoch {epoch},\tL1 = {np.mean(l1s)},\tL2 = {np.mean(l2s)}')
+			print(f'Epoch {epoch},\tL1 = {np.mean(l1s)},\tL2 = {np.mean(l2s)}')
 			return np.mean(l1s)+np.mean(l2s), optimizer.param_groups[0]['lr']
 		else:
 			ae1s, ae2s, ae2ae1s = [], [], []
@@ -194,7 +198,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				optimizer.zero_grad()
 				loss.backward()
 				optimizer.step()
-			tqdm.write(f'Epoch {epoch},\tMSE = {np.mean(l1s)}')
+			print(f'Epoch {epoch},\tMSE = {np.mean(l1s)}')
 			return np.mean(l1s), optimizer.param_groups[0]['lr']
 		else:
 			xs = []
@@ -235,8 +239,8 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				model.discriminator.zero_grad()
 				optimizer.step()
 				mses.append(mse.item()); gls.append(gl.item()); dls.append(dl.item())
-				# tqdm.write(f'Epoch {epoch},\tMSE = {mse},\tG = {gl},\tD = {dl}')
-			tqdm.write(f'Epoch {epoch},\tMSE = {np.mean(mses)},\tG = {np.mean(gls)},\tD = {np.mean(dls)}')
+				# print(f'Epoch {epoch},\tMSE = {mse},\tG = {gl},\tD = {dl}')
+			print(f'Epoch {epoch},\tMSE = {np.mean(mses)},\tG = {np.mean(gls)},\tD = {np.mean(dls)}')
 			return np.mean(gls)+np.mean(dls), optimizer.param_groups[0]['lr']
 		else:
 			outputs = []
@@ -249,17 +253,18 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 			loss = loss[:, data.shape[1]-feats:data.shape[1]].view(-1, feats)
 			return loss.detach().numpy(), y_pred.detach().numpy()
 	elif 'TranAD' in model.name:
-		l = nn.MSELoss(reduction = 'none')
+		l = nn.MSELoss(reduction = 'none').to(DEVICE)
 		data_x = torch.DoubleTensor(data); dataset = TensorDataset(data_x, data_x)
-		bs = model.batch if training else len(data)
+		bs = model.batch #  if training else len(data)
 		dataloader = DataLoader(dataset, batch_size = bs)
 		n = epoch + 1; w_size = model.n_window
 		l1s, l2s = [], []
 		if training:
-			for d, _ in dataloader:
+			for d, _ in tqdm(dataloader, leave=False):
 				local_bs = d.shape[0]
-				window = d.permute(1, 0, 2)
+				window = d.permute(1, 0, 2).to(DEVICE)
 				elem = window[-1, :, :].view(1, local_bs, feats)
+				window = window[:-1, :, :]
 				z = model(window, elem)
 				l1 = l(z, elem) if not isinstance(z, tuple) else (1 / n) * l(z[0], elem) + (1 - 1/n) * l(z[1], elem)
 				if isinstance(z, tuple): z = z[1]
@@ -269,21 +274,34 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				loss.backward(retain_graph=True)
 				optimizer.step()
 			scheduler.step()
-			tqdm.write(f'Epoch {epoch},\tL1 = {np.mean(l1s)}')
+			print(f'Epoch {epoch},\tL1 = {np.mean(l1s)}')
 			return np.mean(l1s), optimizer.param_groups[0]['lr']
 		else:
-			for d, _ in dataloader:
-				window = d.permute(1, 0, 2)
-				elem = window[-1, :, :].view(1, bs, feats)
-				z = model(window, elem)
-				if isinstance(z, tuple): z = z[1]
-			loss = l(z, elem)[0]
-			return loss.detach().numpy(), z.detach().numpy()[0]
+			with torch.no_grad():
+				elems = []
+				z0s = []
+				z1s = []
+				for d, _ in tqdm(dataloader, leave=False):
+					local_bs = d.shape[0]
+					window = d.permute(1, 0, 2).to(DEVICE)
+					elemi = window[-1, :, :].view(1, local_bs, feats).to(DEVICE)
+					window = window[:-1, :, :]
+					zi = model(window, elemi)
+					#  if isinstance(zi, tuple): zi = zi[1]
+					elems.append(elemi)
+					z0s.append(zi[0])
+					z1s.append(zi[1])
+				elem = torch.concatenate(elems, dim=1)
+				z0 = torch.concatenate(z0s, dim=1)
+				z1 = torch.concatenate(z1s, dim=1)
+				loss = l(z1, elem)
+				print(f'Size of testing loss {loss.shape}, z0 {z0.shape}, z1 {z1.shape}')
+				return loss.detach().cpu().numpy()[0], z1.detach().cpu().numpy()[0]
 	else:
 		y_pred = model(data)
 		loss = l(y_pred, data)
 		if training:
-			tqdm.write(f'Epoch {epoch},\tMSE = {loss}')
+			print(f'Epoch {epoch},\tMSE = {loss}')
 			optimizer.zero_grad()
 			loss.backward()
 			optimizer.step()
@@ -297,6 +315,7 @@ if __name__ == '__main__':
 	if args.model in ['MERLIN']:
 		eval(f'run_{args.model.lower()}(test_loader, labels, args.dataset)')
 	model, optimizer, scheduler, epoch, accuracy_list = load_model(args.model, labels.shape[1])
+	model = model.to(DEVICE)
 
 	## Prepare data
 	trainD, testD = next(iter(train_loader)), next(iter(test_loader))
@@ -308,7 +327,7 @@ if __name__ == '__main__':
 	if not args.test:
 		print(f'{color.HEADER}Training {args.model} on {args.dataset}{color.ENDC}')
 		num_epochs = 5; e = epoch + 1; start = time()
-		for e in tqdm(list(range(epoch+1, epoch+num_epochs+1))):
+		for e in list(range(epoch+1, epoch+num_epochs+1)):
 			lossT, lr = backprop(e, model, trainD, trainO, optimizer, scheduler)
 			accuracy_list.append((lossT, lr))
 		print(color.BOLD+'Training time: '+"{:10.4f}".format(time()-start)+' s'+color.ENDC)
@@ -337,7 +356,8 @@ if __name__ == '__main__':
 	# pd.DataFrame(preds, columns=[str(i) for i in range(10)]).to_csv('labels.csv')
 	lossTfinal, lossFinal = np.mean(lossT, axis=1), np.mean(loss, axis=1)
 	labelsFinal = (np.sum(labels, axis=1) >= 1) + 0
-	result, _ = pot_eval(lossTfinal, lossFinal, labelsFinal)
+	print(f'size of lossT {lossTfinal.shape}, loss {lossFinal.shape}, labels {labelsFinal.shape}')
+	result, _ = pot_eval(lossTfinal, lossFinal, labelsFinal, testing=True)
 	result.update(hit_att(loss, labels))
 	result.update(ndcg(loss, labels))
 	print(df)

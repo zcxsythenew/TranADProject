@@ -7,7 +7,7 @@ import json
 from src.folderconstants import *
 from shutil import copyfile
 
-datasets = ['synthetic', 'SMD', 'SWaT', 'SMAP', 'MSL', 'WADI', 'MSDS', 'UCR', 'MBA', 'NAB']
+datasets = ['synthetic', 'SMD', 'SWaT', 'SMAP', 'MSL', 'WADI', 'MSDS', 'UCR', 'MBA', 'NAB', 'k8s']
 
 wadi_drop = ['2_LS_001_AL', '2_LS_002_AL','2_P_001_STATUS','2_P_002_STATUS']
 
@@ -196,6 +196,18 @@ def load_data(dataset):
 			labels[ls + i, :] = 1
 		for file in ['train', 'test', 'labels']:
 			np.save(os.path.join(folder, f'{file}.npy'), eval(file))
+	elif dataset == 'k8s':
+		dataset_folder = 'data/k8s'
+		train = pd.read_csv(os.path.join(dataset_folder, 'train.csv')).values[:, 1:].astype(float)
+		test = pd.read_csv(os.path.join(dataset_folder, 'test.csv')).values[:, 1:].astype(float)
+		ls = pd.read_csv(os.path.join(dataset_folder, 'test_label.csv')).values[:, 1:].astype(int).reshape(-1)
+		train, min_a, max_a = normalize3(train)
+		test, _, _ = normalize3(test, min_a, max_a)
+		labels = np.zeros_like(test)
+		labels[ls == 1] = 1
+		for file in ['train', 'test', 'labels']:
+			np.save(os.path.join(folder, f'{file}.npy'), eval(file))
+
 	else:
 		raise Exception(f'Not Implemented. Check one of {datasets}')
 
