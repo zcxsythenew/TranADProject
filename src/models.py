@@ -494,9 +494,9 @@ class TranAD(nn.Module):
 		self.lr = lr
 		self.batch = 128
 		self.n_feats = feats
-		self.n_window = 90
-		self.n = self.n_feats * (self.n_window - 1)
-		self.pos_encoder = PositionalEncoding(2 * feats, 0.1, self.n_window - 1)
+		self.n_window = 220
+		self.n = self.n_feats * (self.n_window)
+		self.pos_encoder = PositionalEncoding(2 * feats, 0.1, self.n_window)
 		encoder_layers = TransformerEncoderLayer(d_model=2 * feats, nhead=feats, dim_feedforward=16, dropout=0.1)
 		self.transformer_encoder = TransformerEncoder(encoder_layers, 1)
 		decoder_layers1 = TransformerDecoderLayer(d_model=2 * feats, nhead=feats, dim_feedforward=16, dropout=0.1)
@@ -528,9 +528,10 @@ class TranAD(nn.Module):
 	def forward(self, src, tgt):
 		# Predictor A
 		# Phase 0 - GRU
-		token, _ = self.gru(src)
-		token = token[-1, :, :]
-		token = token.reshape(1, token.shape[0], token.shape[1])
+		# token, _ = self.gru(src)
+		# token = token[-1, :, :]
+		# token = token.reshape(1, token.shape[0], token.shape[1])
+		token = tgt
 		# Phase 1 - Without anomaly scores
 		c = torch.zeros_like(src)
 		encoded = self.encode(src, c, token)

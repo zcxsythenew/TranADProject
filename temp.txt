@@ -1,0 +1,90 @@
+(TranAD) (base) wuguozhang@AI-Cluster-2:~/TranAD$ python main.py --model TranAD --dataset k8s --retrain
+Creating new model: TranAD
+Training TranAD on k8s
+Epoch 0,        L1 = 0.013974467422582636                                                                                                                          
+Epoch 1,        L1 = 0.01319852888606445                                                                                                                           
+Epoch 2,        L1 = 0.007912784519546332                                                                                                                          
+Epoch 3,        L1 = 0.007319786568401444                                                                                                                          
+Epoch 4,        L1 = 0.006910297756981915                                                                                                                          
+Training time:   681.3493 s
+findfont: Font family ['serif'] not found. Falling back to DejaVu Sans.
+findfont: Generic family 'serif' not found because none of the following families were found: Times
+Testing TranAD on k8s
+Size of testing loss torch.Size([1, 8027, 145]), z0 torch.Size([1, 8027, 145]), z1 torch.Size([1, 8027, 145])                                                      
+findfont: Font family ['serif'] not found. Falling back to DejaVu Sans.
+findfont: Generic family 'serif' not found because none of the following families were found: Times
+Size of testing loss torch.Size([1, 18731, 145]), z0 torch.Size([1, 18731, 145]), z1 torch.Size([1, 18731, 145])                                                   
+size of lossT (18731,), loss (8027,), labels (8027,)
+[DEBUG] AUC: 0.9527629205699343, AP: 0.5075504250189433
+           f1  precision    recall     TP      TN      FP     FN   ROC/AUC     threshold
+0    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  4.581131e+51
+1    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  2.102678e+42
+2    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  7.690548e+68
+3    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  4.528076e+60
+4    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  1.674813e+64
+..        ...        ...       ...    ...     ...     ...    ...       ...           ...
+140  0.204277   0.115086  0.907975  148.0  6726.0  1138.0   15.0  0.881633  3.700455e-02
+141  0.225373   0.130435  0.828221  135.0  6964.0   900.0   28.0  0.856888  3.583195e-02
+142  0.204988   0.115152  0.932515  152.0  6696.0  1168.0   11.0  0.891995  2.703329e-02
+143  0.223004   0.125997  0.969325  158.0  6768.0  1096.0    5.0  0.914978  1.867970e-02
+144  0.212095   0.121622  0.828221  135.0  6889.0   975.0   28.0  0.852119  3.236613e-02
+
+[145 rows x 9 columns]
+{'FN': 2,
+ 'FP': 1040,
+ 'Hit@100%': 1.0,
+ 'Hit@150%': 1.0,
+ 'NDCG@100%': 1.0000000000000002,
+ 'NDCG@150%': 1.0000000000000002,
+ 'ROC/AUC': 0.927740920807095,
+ 'TN': 6824,
+ 'TP': 161,
+ 'f1': 0.2360682733715868,
+ 'precision': 0.13405495308863485,
+ 'recall': 0.9877300007527606,
+ 'threshold': 0.03400355580555464}
+(TranAD) (base) wuguozhang@AI-Cluster-2:~/TranAD$ python main.py --model TranAD --dataset k8s --retrain
+Creating new model: TranAD
+Training TranAD on k8s
+Epoch 0,        L1 = 0.009838625999002922                                                                                                                          
+Epoch 1,        L1 = 0.007498761742474706                                                                                                                          
+Epoch 2,        L1 = 0.0019082654963146508                                                                                                                         
+Epoch 3,        L1 = 0.0013799020925484165                                                                                                                         
+Epoch 4,        L1 = 0.0011172899317950914                                                                                                                         
+Training time:   566.7480 s
+findfont: Font family ['serif'] not found. Falling back to DejaVu Sans.
+findfont: Generic family 'serif' not found because none of the following families were found: Times
+Testing TranAD on k8s
+Size of testing loss torch.Size([1, 8027, 145]), z0 torch.Size([1, 8027, 145]), z1 torch.Size([1, 8027, 145])                                                      
+findfont: Font family ['serif'] not found. Falling back to DejaVu Sans.
+findfont: Generic family 'serif' not found because none of the following families were found: Times
+Size of testing loss torch.Size([1, 18731, 145]), z0 torch.Size([1, 18731, 145]), z1 torch.Size([1, 18731, 145])                                                   
+size of lossT (18731,), loss (8027,), labels (8027,)
+[DEBUG] AUC: 0.945247115066561, AP: 0.4834319650223074
+           f1  precision    recall     TP      TN      FP     FN   ROC/AUC     threshold
+0    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  1.886232e+45
+1    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  2.955387e+42
+2    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  3.150070e+57
+3    0.214617   0.122885  0.846626  138.0  6879.0   985.0   25.0  0.860686  1.733979e-04
+4    0.000000   0.000000  0.000000    0.0  7864.0     0.0  163.0  0.500000  6.715299e+55
+..        ...        ...       ...    ...     ...     ...    ...       ...           ...
+140  0.159054   0.086786  0.950920  155.0  6233.0  1631.0    8.0  0.871760  1.420338e-03
+141  0.254235   0.150167  0.828221  135.0  7100.0   764.0   28.0  0.865535  4.117291e-03
+142  0.230582   0.132597  0.883436  144.0  6922.0   942.0   19.0  0.881825  1.722429e-03
+143  0.310091   0.186717  0.914110  149.0  7215.0   649.0   14.0  0.915791  8.636508e-04
+144  0.200540   0.112719  0.907975  148.0  6699.0  1165.0   15.0  0.879916  1.363770e-03
+
+[145 rows x 9 columns]
+{'FN': 8,
+ 'FP': 835,
+ 'Hit@100%': 1.0,
+ 'Hit@150%': 1.0,
+ 'NDCG@100%': 1.0000000000000002,
+ 'NDCG@150%': 1.0000000000000002,
+ 'ROC/AUC': 0.9223700921805665,
+ 'TN': 7029,
+ 'TP': 155,
+ 'f1': 0.26886140114067447,
+ 'precision': 0.15656565498418532,
+ 'recall': 0.9509201870601112,
+ 'threshold': 0.0013555133510822141}
