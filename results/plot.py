@@ -8,13 +8,13 @@ import torch
 
 
 def main():
-    folder = 'results/tran-ad-220-no-adjust'
+    folder = 'results/tran-ad-220-gru-no-adjust'
     roc = matplotlib.pyplot.figure(1)
     ax = roc.add_subplot()
     ax.set_xlabel('FPR')
     ax.set_ylabel('TPR')
 
-    for i in range(5):
+    for i in range(10):
         path = os.path.join(folder, f'words_{i+1}.pkl')
         with open(path, 'rb') as f:
             words = pickle.load(f)
@@ -36,7 +36,7 @@ def main():
     ax.set_xlabel('Recall')
     ax.set_ylabel('Precision')
     
-    for i in range(5):
+    for i in range(10):
         path = os.path.join(folder, f'words_{i+1}.pkl')
         with open(path, 'rb') as f:
             words = pickle.load(f)

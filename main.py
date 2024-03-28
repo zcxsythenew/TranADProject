@@ -264,7 +264,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 				local_bs = d.shape[0]
 				window = d.permute(1, 0, 2).to(DEVICE)
 				elem = window[-1, :, :].view(1, local_bs, feats)
-				# window = window[:-1, :, :]
+				window = window[:-1, :, :]
 				z = model(window, elem)
 				l1 = l(z, elem) if not isinstance(z, tuple) else (1 / n) * l(z[0], elem) + (1 - 1/n) * l(z[1], elem)
 				if isinstance(z, tuple): z = z[1]
@@ -285,7 +285,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 					local_bs = d.shape[0]
 					window = d.permute(1, 0, 2).to(DEVICE)
 					elemi = window[-1, :, :].view(1, local_bs, feats).to(DEVICE)
-					# window = window[:-1, :, :]
+					window = window[:-1, :, :]
 					zi = model(window, elemi)
 					#  if isinstance(zi, tuple): zi = zi[1]
 					elems.append(elemi)
